@@ -772,7 +772,6 @@ GET_LAST_COMMITS_EXAMPLE = """[
   }
 ]"""
 
-
 INSTALLATION_EVENT_EXAMPLE = """{
   "action": "created",
   "installation": {
@@ -819,7 +818,6 @@ INSTALLATION_EVENT_EXAMPLE = """{
     "site_admin": false
   }
 }"""
-
 
 INSTALLATION_REPO_EVENT = """{
   "action": "added",

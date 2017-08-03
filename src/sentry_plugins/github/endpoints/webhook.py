@@ -16,8 +16,8 @@ from django.utils import timezone
 from simplejson import JSONDecodeError
 from sentry import options
 from sentry.models import (
-    Commit, CommitAuthor, CommitFileChange, Integration,
-    Organization, OrganizationOption, Repository, User
+    Commit, CommitAuthor, CommitFileChange, Integration, Organization, OrganizationOption,
+    Repository, User
 )
 from sentry.plugins.providers import RepositoryProvider
 from sentry.utils import json
@@ -83,7 +83,7 @@ class InstallationRepositoryEventWebhook(Webhook):
                         provider='github',
                         external_id=r['id'],
                         defaults={
-                            'url': 'https://github.com/%s' % (r['full_name'],),
+                            'url': 'https://github.com/%s' % (r['full_name'], ),
                             'config': config,
                             'integration_id': integration.id,
                         }
@@ -260,7 +260,6 @@ class PushEventWebhook(Webhook):
             if 'installation' not in event:
                 return
 
-            print event['installation']['id']
             integration = Integration.objects.get(
                 external_id=event['installation']['id'],
                 provider='github_apps',
@@ -372,7 +371,6 @@ class GithubWebhookBase(View):
 
 # non-integration version
 class GithubWebhookEndpoint(GithubWebhookBase):
-
     def get_logging_data(self, organization):
         return {
             'organization_id': organization.id,
@@ -393,9 +391,11 @@ class GithubWebhookEndpoint(GithubWebhookBase):
                 id=organization_id,
             )
         except Organization.DoesNotExist:
-            logger.error('github.webhook.invalid-organization', extra={
-                'organization_id': organization_id,
-            })
+            logger.error(
+                'github.webhook.invalid-organization', extra={
+                    'organization_id': organization_id,
+                }
+            )
             return HttpResponse(status=400)
 
         return self.handle(request, organization=organization)

@@ -53,18 +53,14 @@ class GitHubClientBase(object):
     def compare_commits(self, repo, start_sha, end_sha):
         # see https://developer.github.com/v3/repos/commits/#compare-two-commits
         # where start sha is oldest and end is most recent
-        return self.request(
-            'GET',
-            '/repos/{}/compare/{}...{}'.format(
-                repo,
-                start_sha,
-                end_sha,
-            )
-        )
+        return self.request('GET', '/repos/{}/compare/{}...{}'.format(
+            repo,
+            start_sha,
+            end_sha,
+        ))
 
 
 class GitHubClient(GitHubClientBase):
-
     def __init__(self, url=None, token=None):
         if url is not None:
             self.url = url.rstrip('/')
@@ -196,9 +192,7 @@ class GitHubAppsClient(GitHubClientBase):
         }
 
         return jwt.encode(
-            payload,
-            options.get('plugins.github.integration-private-key'),
-            algorithm='RS256'
+            payload, options.get('plugins.github.integration-private-key'), algorithm='RS256'
         )
 
     def request(self, method, path, headers=None, data=None, params=None):

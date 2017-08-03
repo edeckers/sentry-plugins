@@ -1,15 +1,14 @@
 from __future__ import absolute_import
 
-from sentry.options import (
-    FLAG_PRIORITIZE_DISK, FLAG_REQUIRED, register
-)
+from sentry.options import (FLAG_PRIORITIZE_DISK, FLAG_REQUIRED, register)
 
 from sentry_plugins.base import assert_package_not_installed
 
 assert_package_not_installed('sentry-github')
 
 # Plugins
-register('plugins.github.integration-private-key',
+register(
+    'plugins.github.integration-private-key',
     default='',
     flags=FLAG_REQUIRED | FLAG_PRIORITIZE_DISK,
 )

@@ -5,15 +5,13 @@ import six
 
 from datetime import datetime
 from django.utils import timezone
-from sentry.models import (
-    Commit, CommitAuthor, Integration, OrganizationOption, Repository
-)
+from sentry.models import (Commit, CommitAuthor, Integration, OrganizationOption, Repository)
 from sentry.testutils import APITestCase
 from uuid import uuid4
 
 from sentry_plugins.github.testutils import (
-    INSTALLATION_EVENT_EXAMPLE, INSTALLATION_REPO_EVENT,
-    PUSH_EVENT_EXAMPLE, PUSH_EVENT_EXAMPLE_INSTALLATION
+    INSTALLATION_EVENT_EXAMPLE, INSTALLATION_REPO_EVENT, PUSH_EVENT_EXAMPLE,
+    PUSH_EVENT_EXAMPLE_INSTALLATION
 )
 
 
@@ -239,9 +237,11 @@ class InstallationPushEventWebhookTest(APITestCase):
 
         assert response.status_code == 204
 
-        commit_list = list(Commit.objects.filter(
-            organization_id=project.organization_id,
-        ).select_related('author').order_by('-date_added'))
+        commit_list = list(
+            Commit.objects.filter(
+                organization_id=project.organization_id,
+            ).select_related('author').order_by('-date_added')
+        )
 
         assert len(commit_list) == 2
 
