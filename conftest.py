@@ -61,5 +61,8 @@ def pytest_configure(config):
     settings.BITBUCKET_CONSUMER_SECRET = '123'
     settings.GITHUB_APP_ID = 'abc'
     settings.GITHUB_API_SECRET = '123'
+    settings.GITHUB_APPS_APP_ID = 'abc'
+    settings.GITHUB_APPS_API_SECRET = '123'
     # this isn't the real secret
-    settings.SENTRY_OPTIONS['plugins.github.integration-hook-secret'] = 'b3002c3e321d4b7880360d397db2ccfd'
+    settings.SENTRY_OPTIONS['plugins.github.integration-hook-secret'
+                            ] = 'b3002c3e321d4b7880360d397db2ccfd'

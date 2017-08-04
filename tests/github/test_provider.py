@@ -1,12 +1,19 @@
 from __future__ import absolute_import
 
+from mock import patch
+
 from exam import fixture
-from sentry.models import Repository
+from social_auth.models import UserSocialAuth
+from sentry.models import Integration, OrganizationIntegration, Repository
 from sentry.testutils import PluginTestCase
 from sentry.utils import json
 
-from sentry_plugins.github.plugin import GitHubRepositoryProvider
-from sentry_plugins.github.testutils import COMPARE_COMMITS_EXAMPLE, GET_LAST_COMMITS_EXAMPLE
+from sentry_plugins.github.client import GitHubClient, GitHubAppsClient
+from sentry_plugins.github.plugin import GitHubAppsRepositoryProvider, GitHubRepositoryProvider
+from sentry_plugins.github.testutils import (
+    COMPARE_COMMITS_EXAMPLE, GET_LAST_COMMITS_EXAMPLE, INTSTALLATION_REPOSITORIES_API_RESPONSE,
+    LIST_INSTALLATION_API_RESPONSE
+)
 
 
 class GitHubPluginTest(PluginTestCase):
@@ -51,3 +58,37 @@ class GitHubPluginTest(PluginTestCase):
                 'repository': 'example'
             }
         ]
+
+
+class GitHubAppsProviderTest(PluginTestCase):
+    @fixture
+    def provider(self):
+        return GitHubAppsRepositoryProvider('github_apps')
+
+    @patch.object(
+        GitHubAppsClient,
+        'get_repositories',
+        return_value=json.loads(INTSTALLATION_REPOSITORIES_API_RESPONSE)
+    )
+    @patch.object(
+        GitHubClient, 'get_installations', return_value=json.loads(LIST_INSTALLATION_API_RESPONSE)
+    )
+    def test_link_auth(self, *args):
+        user = self.create_user()
+        organization = self.create_organization()
+        UserSocialAuth.objects.create(
+            user=user,
+            provider='github_apps',
+            extra_data={'access_token': 'abcdefg'},
+        )
+
+        integration = Integration.objects.create(
+            provider='github_apps',
+            external_id='1',
+        )
+
+        self.provider.link_auth(user, organization, {'integration_id': integration.id})
+
+        assert OrganizationIntegration.objects.filter(
+            organization=organization, integration=integration
+        ).exists()
