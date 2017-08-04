@@ -222,7 +222,7 @@ class InstallationPushEventWebhookTest(APITestCase):
         Repository.objects.create(
             organization_id=project.organization.id,
             external_id='35129377',
-            provider='github',
+            provider='github_apps',
             name='baxterthehacker/public-repo',
         )
 
