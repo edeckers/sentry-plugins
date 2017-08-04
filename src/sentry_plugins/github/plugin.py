@@ -11,7 +11,7 @@ from social_auth.models import UserSocialAuth
 from sentry import options
 from sentry.app import locks
 from sentry.exceptions import InvalidIdentity, PluginError
-from sentry.models import Integration, OrganizationOption
+from sentry.models import Integration, OrganizationOption, Repository
 from sentry.plugins.bases.issue2 import IssuePlugin2, IssueGroupActionEndpoint
 from sentry.plugins import providers
 from sentry.utils.http import absolute_uri
@@ -273,8 +273,6 @@ class GitHubPlugin(CorePluginMixin, GitHubMixin, IssuePlugin2):
 class GitHubRepositoryProvider(GitHubMixin, providers.RepositoryProvider):
     name = 'GitHub'
     auth_provider = 'github'
-    installation_auth_provider = 'github_apps'
-    has_installations = True
     logger = logging.getLogger('sentry.plugins.github')
 
     def get_config(self):
@@ -385,10 +383,10 @@ class GitHubRepositoryProvider(GitHubMixin, providers.RepositoryProvider):
         ]
 
     def compare_commits(self, repo, start_sha, end_sha, actor=None):
-        installation_id = repo.config.get('installation_id')
-        if installation_id:
+        integration_id = repo.integration_id
+        if integration_id:
             client = GitHubAppsClient(
-                Integration.objects.get(installation_id=installation_id),
+                Integration.objects.get(id=integration_id),
             )
         elif actor is not None:
             client = self.get_client(actor)
@@ -423,6 +421,7 @@ class GitHubAppsRepositoryProvider(GitHubRepositoryProvider):
 
     def get_available_auths(self, user, organization, integrations, social_auths, **kwargs):
         allowed_gh_installations = set(self.get_installations(user))
+
         linked_integrations = {i.id for i in integrations}
 
         _integrations = list(
@@ -465,12 +464,26 @@ class GitHubAppsRepositoryProvider(GitHubRepositoryProvider):
 
         integration.add_organization(organization.id)
 
+        for repo in self.get_repositories(integration):
+            # TODO(jess): figure out way to migrate from github --> github apps
+            Repository.objects.create_or_update(
+                organization_id=organization.id,
+                name=repo['name'],
+                external_id=repo['external_id'],
+                provider='github_apps',
+                values={
+                    'integration_id': integration.id,
+                    'url': repo['url'],
+                    'config': repo['config'],
+                },
+            )
+
     def delete_repository(self, repo, actor=None):
         if actor is None:
             raise NotImplementedError('Cannot delete a repository anonymously')
 
         # there isn't a webhook to delete for integrations
-        if not repo.config.get('webhook_id') and repo.config.get('installation_id'):
+        if not repo.config.get('webhook_id') and repo.integration_id is not None:
             return
 
         return super(GitHubAppsRepositoryProvider, self).delete_repository(repo, actor=actor)
@@ -520,8 +533,8 @@ class GitHubAppsRepositoryProvider(GitHubRepositoryProvider):
 
         return [install['id'] for install in res['installations']]
 
-    def get_repositories(self, installation):
-        client = GitHubAppsClient(installation)
+    def get_repositories(self, integration):
+        client = GitHubAppsClient(integration)
 
         res = client.get_repositories()
         return [
@@ -529,10 +542,8 @@ class GitHubAppsRepositoryProvider(GitHubRepositoryProvider):
                 'name': '%s/%s' % (r['owner']['login'], r['name']),
                 'external_id': r['id'],
                 'url': r['html_url'],
-                'provider': 'github',
                 'config': {
                     'name': '%s/%s' % (r['owner']['login'], r['name']),
-                    'installation_id': installation.installation_id,
-                }
+                },
             } for r in res['repositories']
         ]

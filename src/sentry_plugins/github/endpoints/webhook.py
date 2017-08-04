@@ -97,7 +97,7 @@ class InstallationRepositoryEventWebhook(Webhook):
 
 
 class PushEventWebhook(Webhook):
-    def _handle(self, event, organization):
+    def _handle(self, event, organization, is_apps):
         authors = {}
 
         client = GitHubClient()
@@ -106,7 +106,7 @@ class PushEventWebhook(Webhook):
         try:
             repo = Repository.objects.get(
                 organization_id=organization.id,
-                provider='github',
+                provider='github_apps' if is_apps else 'github',
                 external_id=six.text_type(event['repository']['id']),
             )
         except Repository.DoesNotExist:
@@ -256,6 +256,7 @@ class PushEventWebhook(Webhook):
 
     # https://developer.github.com/v3/activity/events/types/#pushevent
     def __call__(self, event, organization=None):
+        is_apps = 'installation' in event
         if organization is None:
             if 'installation' not in event:
                 return
@@ -269,7 +270,7 @@ class PushEventWebhook(Webhook):
             organizations = [organization]
 
         for org in organizations:
-            self._handle(event, org)
+            self._handle(event, org, is_apps)
 
 
 class GithubWebhookBase(View):

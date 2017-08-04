@@ -162,8 +162,8 @@ class GitHubClient(GitHubClientBase):
 class GitHubAppsClient(GitHubClientBase):
     url = 'https://api.github.com'
 
-    def __init__(self, installation):
-        self.installation = installation
+    def __init__(self, integration):
+        self.integration = integration
         self.token = None
         self.expires_at = None
 
@@ -208,7 +208,7 @@ class GitHubAppsClient(GitHubClientBase):
         return self.request(
             'POST',
             '/installations/{}/access_tokens'.format(
-                self.installation.installation_id,
+                self.integration.external_id,
             ),
             headers={
                 'Authorization': 'Bearer %s' % self.get_jwt(),
