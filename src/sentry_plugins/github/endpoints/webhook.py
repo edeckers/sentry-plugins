@@ -304,9 +304,6 @@ class GithubWebhookBase(View):
     def get_logging_data(self, organization):
         pass
 
-    def get_kwargs(self, request, *args, **kwargs):
-        pass
-
     def get_secret(self, organization):
         raise NotImplementedError
 
@@ -376,9 +373,6 @@ class GithubWebhookEndpoint(GithubWebhookBase):
         return {
             'organization_id': organization.id,
         }
-
-    def get_kwargs(self, request, organization_id, **kwargs):
-        return
 
     def get_secret(self, organization):
         return OrganizationOption.objects.get_value(
