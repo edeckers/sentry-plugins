@@ -73,3 +73,24 @@ class GitLabClient(object):
             'GET',
             '/projects/{}/members'.format(quote(repo, safe='')),
         )
+
+    def get_last_commits(self, repo, end_sha):
+        # return api request that fetches last ~30 commits
+        # see https://developer.github.com/v3/repos/commits/#list-commits-on-a-repository
+        # using end_sha as parameter
+        return self.request(
+            'GET',
+            '/projects/{}/commits'.format(
+                repo,
+            ),
+            params={'sha': end_sha},
+        )
+
+    def compare_commits(self, repo, start_sha, end_sha):
+        # see https://developer.github.com/v3/repos/commits/#compare-two-commits
+        # where start sha is oldest and end is most recent
+        return self.request('GET', '/projects/{}/repository/compare?from={}&to={}'.format(
+            repo,
+            start_sha,
+            end_sha,
+        ))
